@@ -10,18 +10,12 @@ void setup() {
 
 void loop() {
   int qti1 = rcTime(lineSensor1); 
-  Serial.print("qti1 ");
-  Serial.println(light(qti1)); 
-
   int qti2 = rcTime(lineSensor2); 
-  Serial.print("qti2 ");
-  Serial.println(light(qti2)); 
-
   int qti3 = rcTime(lineSensor3); 
-  Serial.print("qti3 ");
-  Serial.println(light(qti3)); 
 
-  
+
+  int state = 4*light(qti1) + 2*light(qti2) + light(qti3);
+  Serial.println(state);
   
   delay(200);
 }
