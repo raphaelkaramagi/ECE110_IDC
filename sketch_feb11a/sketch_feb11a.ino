@@ -3,9 +3,16 @@
 #define lineSensor2 49 
 #define lineSensor3 51 
 
+#include <Servo.h>
+Servo servoLeft;
+Servo servoRight;
+
 void setup() {
   Serial.begin(9600); //start the serial monitor so we can view the output
   int state = 0;
+
+  servoLeft.attach(12);
+  servoRight.attach(11);
 }
 
 void loop() {
@@ -13,11 +20,48 @@ void loop() {
   int qti2 = rcTime(lineSensor2); 
   int qti3 = rcTime(lineSensor3); 
 
-
   int state = 4*light(qti1) + 2*light(qti2) + light(qti3);
   Serial.println(state);
-  
-  delay(200);
+
+
+  switch(state){
+    case 0:
+      servoLeft.writeMicroseconds(1500);
+      servoRight.writeMicroseconds(1500);
+      state = 5;
+      delay(1000);
+      servoLeft.writeMicroseconds(1300);
+      servoRight.writeMicroseconds(1600);
+      break;
+
+    case 1:
+      servoLeft.writeMicroseconds(1300);
+      servoRight.writeMicroseconds(1500);
+      break;
+    case 2:
+      // Unlikely
+      break;
+    case 3: 
+      // TURN LIGHT
+      break;
+    case 4:
+      // TURN RIGHT
+      break;
+    case 5:
+      servoLeft.writeMicroseconds(1300);
+      servoRight.writeMicroseconds(1600);
+      break;
+    case 6: 
+      // TURN RIGHT
+      break;
+    case 7: 
+      // Move right servo, delay 2 sec the right servo
+      break;
+
+
+
+
+  }
 }
 
 //Defines funtion 'rcTime' to read value from QTI sensor
