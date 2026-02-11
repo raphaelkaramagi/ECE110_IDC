@@ -3,9 +3,15 @@
 #define lineSensor2 49 
 #define lineSensor3 51 
 
+#define redpin 45
+#define greenpin 46
+#define bluepin 44
+
 #include <Servo.h>
 Servo servoLeft;
 Servo servoRight;
+
+int hashCounter = 0;
 
 void setup() {
   Serial.begin(9600); //start the serial monitor so we can view the output
@@ -13,6 +19,14 @@ void setup() {
 
   servoLeft.attach(12);
   servoRight.attach(11);
+
+  // Set pin modes
+  pinMode(redpin, OUTPUT);
+  pinMode(greenpin, OUTPUT);
+  pinMode(bluepin, OUTPUT);
+  analogWrite(redpin, 255);
+  analogWrite(greenpin, 255);
+  analogWrite(bluepin, 255);
 }
 
 void loop() {
@@ -28,10 +42,77 @@ void loop() {
     case 0:
       servoLeft.writeMicroseconds(1500);
       servoRight.writeMicroseconds(1500);
+
+      hashCounter++;
+
+       switch(hashCounter){
+          case 1: 
+            // purple
+            analogWrite(redpin, 0);
+            analogWrite(greenpin, 255);
+            analogWrite(bluepin, 0);
+            delay(1000);
+            analogWrite(redpin, 255);
+            analogWrite(greenpin, 255);
+            analogWrite(bluepin, 255);
+            break;
+          case 2:
+            // green
+            analogWrite(redpin, 255);
+            analogWrite(greenpin, 0);
+            analogWrite(bluepin, 255);
+            delay(1000);
+            analogWrite(redpin, 255);
+            analogWrite(greenpin, 255);
+            analogWrite(bluepin, 255);
+            break;
+          case 3:
+            // blue
+            analogWrite(redpin, 255);
+            analogWrite(greenpin, 255);
+            analogWrite(bluepin, 0);
+            delay(1000);
+            analogWrite(redpin, 255);
+            analogWrite(greenpin, 255);
+            analogWrite(bluepin, 255);
+            break;
+          case 4:
+            // red
+            analogWrite(redpin, 0);
+            analogWrite(greenpin, 255);
+            analogWrite(bluepin, 255);
+            delay(1000);
+            analogWrite(redpin, 255);
+            analogWrite(greenpin, 255);
+            analogWrite(bluepin, 255);
+            break;
+          case 5:
+            // white
+            analogWrite(redpin, 0);
+            analogWrite(greenpin, 0);
+            analogWrite(bluepin, 0);
+            delay(1000);
+            analogWrite(redpin, 255);
+            analogWrite(greenpin, 255);
+            analogWrite(bluepin, 255);
+
+            servoLeft.writeMicroseconds(1500);
+            servoRight.writeMicroseconds(1700);
+            delay(900);
+            servoLeft.writeMicroseconds(1300);
+            servoRight.writeMicroseconds(1600);
+            break;
+          case 6: 
+            servoLeft.detach();
+            servoRight.detach();
+            break;
+        }
+
       delay(1000);
       servoLeft.writeMicroseconds(1300);
       servoRight.writeMicroseconds(1600);
       delay(300);
+
       break;
 
     case 1:
@@ -59,6 +140,7 @@ void loop() {
     case 7: 
       break;
   }
+
 }
 
 //Defines funtion 'rcTime' to read value from QTI sensor
