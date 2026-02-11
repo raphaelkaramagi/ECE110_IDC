@@ -28,10 +28,10 @@ void loop() {
     case 0:
       servoLeft.writeMicroseconds(1500);
       servoRight.writeMicroseconds(1500);
-      state = 5;
       delay(1000);
       servoLeft.writeMicroseconds(1300);
       servoRight.writeMicroseconds(1600);
+      delay(300);
       break;
 
     case 1:
@@ -39,28 +39,25 @@ void loop() {
       servoRight.writeMicroseconds(1500);
       break;
     case 2:
-      // Unlikely
       break;
     case 3: 
-      // TURN LIGHT
+      servoLeft.writeMicroseconds(1300);
+      servoRight.writeMicroseconds(1500);
       break;
     case 4:
-      // TURN RIGHT
+      servoLeft.writeMicroseconds(1500);
+      servoRight.writeMicroseconds(1700);
       break;
     case 5:
       servoLeft.writeMicroseconds(1300);
       servoRight.writeMicroseconds(1600);
       break;
     case 6: 
-      // TURN RIGHT
+      servoLeft.writeMicroseconds(1500);
+      servoRight.writeMicroseconds(1700);
       break;
     case 7: 
-      // Move right servo, delay 2 sec the right servo
       break;
-
-
-
-
   }
 }
 
