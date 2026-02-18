@@ -19,8 +19,8 @@ Servo servoLeft;   // Left wheel servo
 Servo servoRight;  // Right wheel servo
 
 int hashCounter = 0;  // Counts how many intersections we've crossed
-int rfidLocation = 0; 
-int i=0;
+int rfidLocation = 0; // Stores which intersection the RFID tag was detected at
+int i=0;              // Loop counter used for the blue LED blink at the end
 
 
 void setup() {
@@ -47,6 +47,7 @@ void setup() {
   analogWrite(greenpin, 255);
   analogWrite(bluepin, 255);
 
+  // Turn external LED off too
   digitalWrite(externalRed, 0);
   digitalWrite(externalGreen, 0);
   digitalWrite(externalBlue, 0);
@@ -222,7 +223,9 @@ void loop() {
             servoLeft.detach();
             servoRight.detach();
             
+            // If there's a valid RFID read here, send the location over XBee and light up green
             if(Serial1.read() >1){
+              // Send a unique character over XBee to indicate which intersection the tag was found at. Correspond to ASCII values with 40 - 45  (4 indicating group number, second digit indicating which intersection the tag was found at, if 0, there's no tag at the final intersection)
               switch(rfidLocation){
                 case 1:
                   Serial2.print(')');
@@ -240,9 +243,11 @@ void loop() {
                   Serial2.print('-');
                   break;
               }
+              // Flash green once to confirm we sent the location
               digitalWrite(externalGreen, 255);
               delay(500);
               digitalWrite(externalGreen,0);
+              // Blink blue 10 times to signal we're done
               while(i < 10){
                 digitalWrite(externalBlue,255);
                 delay(250);
@@ -261,7 +266,7 @@ void loop() {
             break;
         }
 
-      // After flashing LED, move forward a bit to get past the intersection
+      // Wait a moment, then nudge forward to clear the intersection so we don't re-trigger case 0
       delay(1000);
       servoLeft.writeMicroseconds(1300);
       servoRight.writeMicroseconds(1600);
