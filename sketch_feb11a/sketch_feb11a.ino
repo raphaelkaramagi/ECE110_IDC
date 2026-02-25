@@ -14,6 +14,14 @@
 #define externalBlue 5
 #define externalGreen 2
 
+#include <Wire.h> // I2C library, required for MLX90614
+#include <SparkFunMLX90614.h> 
+#include <SoftwareSerial.h>
+#define TxPin 14
+#define num 17
+SoftwareSerial mySerial = SoftwareSerial (255, TxPin);
+
+
 #include <Servo.h>
 Servo servoLeft;   // Left wheel servo
 Servo servoRight;  // Right wheel servo
@@ -21,13 +29,25 @@ Servo servoRight;  // Right wheel servo
 int hashCounter = 0;  // Counts how many intersections we've crossed
 int rfidLocation = 0; // Stores which intersection the RFID tag was detected at
 int i=0;              // Loop counter used for the blue LED blink at the end
-
+int scores[5];
+char score;
+char lastIncoming;
 
 void setup() {
   Serial.begin(9600); //start the serial monitor so we can view the output
   Serial1.begin(9600); //Start the RFID monitor
   Serial2.begin(9600); // initialize Xbee Tx/Rx
   int state = 0;
+
+
+  mySerial.begin(9600);
+  delay(100);
+  mySerial.write(12); // clear
+  mySerial.write(22); // no cursor no blink
+  mySerial.write(17); // backlight
+  delay(10);
+  Wire.begin(); //Joing I2C bus
+  
 
   // Connect the servos to their pins
   servoLeft.attach(12);
@@ -64,6 +84,20 @@ void loop() {
   // state can be 0-7 depending on which sensors detect black/white
   int state = 4*light(qti1) + 2*light(qti2) + light(qti3);
   Serial.println(state);
+
+    if(Serial2.available()) { // Is XBee data available?
+    char incoming = Serial2.read(); // Read character
+    analogWrite(redpin, 0);
+    analogWrite(greenpin, 0);
+    analogWrite(bluepin, 0);
+            
+    int groupNo;
+        if(incoming!=lastIncoming){
+          groupNo = incoming/10;
+          scores[groupNo - 4] = incoming % 10;
+          lastIncoming = incoming;
+        }
+    }
 
   // Decide what to do based on sensor readings
   switch(state){
@@ -228,25 +262,31 @@ void loop() {
               // Send a unique character over XBee to indicate which intersection the tag was found at. Correspond to ASCII values with 40 - 45  (4 indicating group number, second digit indicating which intersection the tag was found at, if 0, there's no tag at the final intersection)
               switch(rfidLocation){
                 case 1:
-                  Serial2.print(')');
+                score = ')';
+                  Serial2.print(score);
                   break;
                 case 2:
-                  Serial2.print('*');
+                score = '*';
+                  Serial2.print(score);
                   break;
                 case 3: 
-                  Serial2.print('+');
+                score = '+';
+                  Serial2.print(score);
                   break;
                 case 4:
-                  Serial2.print(',');
+                  score = ',';
+                  Serial2.print(score);
                   break;
                 case 5:
-                  Serial2.print('-');
+                score = '-';
+                  Serial2.print(score);
                   break;
               }
               // Flash green once to confirm we sent the location
               digitalWrite(externalGreen, 255);
               delay(500);
               digitalWrite(externalGreen,0);
+
               // Blink blue 10 times to signal we're done
               while(i < 10){
                 digitalWrite(externalBlue,255);
@@ -258,11 +298,24 @@ void loop() {
               
             }
             else{
-              Serial2.print('(');
+              score = '(';
+              Serial2.print(score);
               digitalWrite(externalRed, 255);
               delay(500);
               digitalWrite(externalRed,0);
             }
+
+            scores[0] = score % 10;
+
+            String myString = "";
+            for(int m = 0; m<5;m++){
+              myString+= String(scores[m]);
+              if(m<5-1){
+                myString+= "-";
+                }
+              }
+            mySerial.print(myString);
+            
             break;
         }
 
