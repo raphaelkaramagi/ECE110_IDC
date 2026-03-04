@@ -31,6 +31,7 @@ int rfidLocation = 0; // Stores which intersection the RFID tag was detected at
 int i=0;              // Loop counter used for the blue LED blink at the end
 int scores[5];
 char score;
+int totalScore;
 char lastIncoming;
 
 void setup() {
@@ -86,16 +87,20 @@ void loop() {
   Serial.println(state);
 
     if(Serial2.available()) { // Is XBee data available?
-    char incoming = Serial2.read(); // Read character
-    analogWrite(redpin, 0);
-    analogWrite(greenpin, 0);
-    analogWrite(bluepin, 0);
-            
+    char incoming = Serial2.read(); // Read character          
     int groupNo;
         if(incoming!=lastIncoming){
           groupNo = incoming/10;
           scores[groupNo - 4] = incoming % 10;
           lastIncoming = incoming;
+
+          digitalWrite(externalRed, 255);
+          digitalWrite(externalGreen, 255);
+          digitalWrite(externalBlue, 255);
+          delay(1000);
+          digitalWrite(externalRed, 0);
+          digitalWrite(externalGreen, 0);
+          digitalWrite(externalBlue, 0);
         }
     }
 
@@ -305,8 +310,10 @@ void loop() {
               digitalWrite(externalRed,0);
             }
 
+            // Our own score
             scores[0] = score % 10;
 
+            // Building string to display on LCD
             String myString = "";
             for(int m = 0; m<5;m++){
               myString+= String(scores[m]);
@@ -315,7 +322,22 @@ void loop() {
                 }
               }
             mySerial.print(myString);
-            
+
+            // Finding total scores
+            for(int k = 0; k<5;k++){
+              totalScore += scores[k];
+            }
+
+            // Light Show & Song for winning
+            if(totalScore>4){
+              winLights();
+            }
+            // Light show & song for losing
+            else{
+              loseSong();
+            }
+
+
             break;
         }
 
@@ -377,4 +399,73 @@ int light(long rcTime){
   else{  // Higher reading = lighter surface (white background)
     return 0;
   }
+}
+
+// 10-second celebratory light show for when totalScore > 10
+void winLights() {
+
+  // Phase 1: rapid R->G->B strobe on external
+  for (int j = 0; j < 5; j++) {
+    digitalWrite(externalRed, 1);   delay(100); digitalWrite(externalRed, 0);
+    digitalWrite(externalGreen, 1); delay(100); digitalWrite(externalGreen, 0);
+    digitalWrite(externalBlue, 1);  delay(100); digitalWrite(externalBlue, 0);
+  }
+
+  // Phase 2: rainbow sweep on onboard LED
+  int cols[5][3] = {
+    {0, 255, 255},  // red
+    {255, 0, 255},  // green
+    {255, 255, 0},  // blue
+    {0, 255, 0},    // purple (red+blue)
+    {0, 0, 0}       // white (all on)
+  };
+  for (int c = 0; c < 5; c++) {
+    analogWrite(redpin, cols[c][0]);
+    analogWrite(greenpin, cols[c][1]);
+    analogWrite(bluepin, cols[c][2]);
+    delay(400);
+  }
+  analogWrite(redpin, 255); analogWrite(greenpin, 255); analogWrite(bluepin, 255);
+
+  // Phase 3: both LEDs alternating flash - external vs onboard
+  for (int j = 0; j < 10; j++) {
+    digitalWrite(externalRed, 1); digitalWrite(externalGreen, 1); digitalWrite(externalBlue, 1);
+    analogWrite(redpin, 255); analogWrite(greenpin, 255); analogWrite(bluepin, 255);
+    delay(100);
+    digitalWrite(externalRed, 0); digitalWrite(externalGreen, 0); digitalWrite(externalBlue, 0);
+    analogWrite(redpin, 0); analogWrite(greenpin, 0); analogWrite(bluepin, 0);
+    delay(100);
+  }
+  analogWrite(redpin, 255); analogWrite(greenpin, 255); analogWrite(bluepin, 255);
+
+  // Phase 4: complementary color chase - each pair cycles 3 times
+  for (int j = 0; j < 3; j++) {
+    digitalWrite(externalRed, 1); digitalWrite(externalGreen, 0); digitalWrite(externalBlue, 0);
+    analogWrite(redpin, 255); analogWrite(greenpin, 255); analogWrite(bluepin, 0);  // blue onboard
+    delay(333);
+    digitalWrite(externalRed, 0); digitalWrite(externalGreen, 1); digitalWrite(externalBlue, 0);
+    analogWrite(redpin, 0); analogWrite(greenpin, 255); analogWrite(bluepin, 255);  // red onboard
+    delay(333);
+    digitalWrite(externalRed, 0); digitalWrite(externalGreen, 0); digitalWrite(externalBlue, 1);
+    analogWrite(redpin, 255); analogWrite(greenpin, 0); analogWrite(bluepin, 255);  // green onboard
+    delay(334);
+  }
+
+  // Phase 5: grand finale - everything flashes together fast
+  for (int j = 0; j < 4; j++) {
+    digitalWrite(externalRed, 1); digitalWrite(externalGreen, 1); digitalWrite(externalBlue, 1);
+    analogWrite(redpin, 0); analogWrite(greenpin, 0); analogWrite(bluepin, 0);
+    delay(125);
+    digitalWrite(externalRed, 0); digitalWrite(externalGreen, 0); digitalWrite(externalBlue, 0);
+    analogWrite(redpin, 255); analogWrite(greenpin, 255); analogWrite(bluepin, 255);
+    delay(125);
+  }
+
+  // All off
+  digitalWrite(externalRed, 0); digitalWrite(externalGreen, 0); digitalWrite(externalBlue, 0);
+  analogWrite(redpin, 255); analogWrite(greenpin, 255); analogWrite(bluepin, 255);
+}
+
+void loseSong(){
+  // placeholder for losing song (piezo via LCD serial)
 }
